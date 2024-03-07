@@ -11,6 +11,7 @@ import stud.ntnu.Calculator.model.User;
 import stud.ntnu.Calculator.repository.CalculationRepository;
 import stud.ntnu.Calculator.repository.UserRepository;
 import stud.ntnu.Calculator.service.UserService;
+import stud.ntnu.Calculator.utility.JwtUtil;
 
 import java.util.List;
 
@@ -26,11 +27,34 @@ public class AuthController {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private JwtUtil jwtUtil;
+
     @PostMapping("/api/login")
     public ResponseEntity<?> login(@RequestBody User user) {
-        boolean loginSuccess = userService.authenticate(user.getUsername(), user.getPassword());
+        User foundUser = userService.getUserByUsername(user.getUsername());
+        if (foundUser != null) {
+            boolean loginSuccess = userService.authenticate(user.getUsername(), user.getPassword());
+            if (loginSuccess) {
+                return ResponseEntity.ok().body("{\"success\": true}");
+            } else {
+                return ResponseEntity.badRequest().body("{\"success\": false, \"message\": \"Invalid credentials\"}");
+            }
+        } else {
+            return ResponseEntity.notFound().build(); // User not found
+        }
+    }
+
+
+    // Endpoint for generating JWT token
+    @PostMapping("/api/token")
+    public ResponseEntity<?> generateToken(@RequestBody User user) {
+        User foundUser = userService.getUserByUsername(user.getUsername());
+        boolean loginSuccess = userService.authenticate(foundUser.getUsername(), foundUser.getPassword());
         if (loginSuccess) {
-            return ResponseEntity.ok().body("{\"success\": true}");
+            // Generate JWT token
+            String token = jwtUtil.generateToken(foundUser.getUsername());
+            return ResponseEntity.ok().body("{\"success\": true, \"token\": \"" + token + "\"}");
         } else {
             return ResponseEntity.badRequest().body("{\"success\": false, \"message\": \"Invalid credentials\"}");
         }
