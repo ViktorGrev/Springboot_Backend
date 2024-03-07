@@ -2,10 +2,7 @@ package stud.ntnu.Calculator.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import stud.ntnu.Calculator.model.Calculation;
 import stud.ntnu.Calculator.model.User;
 import stud.ntnu.Calculator.repository.CalculationRepository;
@@ -14,6 +11,7 @@ import stud.ntnu.Calculator.service.UserService;
 import stud.ntnu.Calculator.utility.JwtUtil;
 
 import java.util.List;
+import java.util.Objects;
 
 @RestController
 public class AuthController {
@@ -63,11 +61,22 @@ public class AuthController {
     }
 
     @PostMapping("/api/previous")
-    public ResponseEntity<List<Calculation>> previous(@RequestParam String username) {
-        User user = userRepository.findUserByUsername(username);
-        System.out.println(user.getId());
-        List<Calculation> calculations = calculationRepository.findCalculationsByUserId(user.getId());
-        System.out.println(calculations);
-        return ResponseEntity.ok().body(calculations);
+    public ResponseEntity<List<Calculation>> previous(@RequestParam String username, @RequestParam String tokenHeader) {
+        if (jwtUtil.validateToken(tokenHeader)){
+            User user = userRepository.findUserByUsername(username);
+            System.out.println(user.getId());
+            List<Calculation> calculations = calculationRepository.findCalculationsByUserId(user.getId());
+            System.out.println(calculations);
+            return ResponseEntity.ok().body(calculations);
+        }
+        throw new IllegalArgumentException("The token is wrong");
+    }
+
+    @PostMapping("/api/validate")
+    public ResponseEntity<Boolean> validate(@RequestParam String username, @RequestParam String tokenHeader) {
+        if (jwtUtil.validateToken(tokenHeader) && Objects.equals(jwtUtil.extractUsername(tokenHeader), username)){
+            return ResponseEntity.ok().body(true);
+        }
+        throw new IllegalArgumentException("The token is wrong");
     }
 }

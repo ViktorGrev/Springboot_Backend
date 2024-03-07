@@ -31,7 +31,7 @@ public class SecurityConfig {
                 // Configure URL authorization
                 .authorizeHttpRequests(authz -> authz
                         .requestMatchers(HttpMethod.GET, "/api/login", "/api/token", "/api/calculator/calculate", "/api/data").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/login", "/api/token", "/api/calculator/calculate", "/api/data", "/api/previous").permitAll()// Corrected path
+                        .requestMatchers(HttpMethod.POST, "/api/login", "/api/token", "/api/calculator/calculate", "/api/data", "/api/previous", "api/validate").permitAll()// Corrected path
                         .anyRequest().authenticated())
                 // Use HTTP Basic Authentication
                 .httpBasic(withDefaults());
