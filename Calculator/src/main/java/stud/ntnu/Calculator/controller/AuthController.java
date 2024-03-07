@@ -34,9 +34,12 @@ public class AuthController {
     public ResponseEntity<?> login(@RequestBody User user) {
         User foundUser = userService.getUserByUsername(user.getUsername());
         if (foundUser != null) {
-            boolean loginSuccess = userService.authenticate(user.getUsername(), user.getPassword());
+            boolean loginSuccess = userService.authenticate(foundUser.getUsername(), foundUser.getPassword());
             if (loginSuccess) {
-                return ResponseEntity.ok().body("{\"success\": true}");
+                // Generate JWT token for the authenticated user
+                String token = jwtUtil.generateToken(foundUser.getUsername());
+                // Include the token in the response
+                return ResponseEntity.ok().body("{\"success\": true, \"token\": \"" + token + "\"}");
             } else {
                 return ResponseEntity.badRequest().body("{\"success\": false, \"message\": \"Invalid credentials\"}");
             }
@@ -44,7 +47,6 @@ public class AuthController {
             return ResponseEntity.notFound().build(); // User not found
         }
     }
-
 
     // Endpoint for generating JWT token
     @PostMapping("/api/token")
@@ -69,4 +71,3 @@ public class AuthController {
         return ResponseEntity.ok().body(calculations);
     }
 }
-
